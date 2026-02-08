@@ -15,21 +15,26 @@
     background: #0a0a0a;
     color: #fff;
     font-family: 'Segoe UI', Tahoma, sans-serif;
+    overflow: hidden;
+    position: relative;
   }
   h1 {
     font-size: clamp(2rem, 6vw, 4rem);
     margin-bottom: 0.5em;
     text-align: center;
+    z-index: 2;
   }
   .subtitle {
     font-size: clamp(1rem, 3vw, 1.5rem);
     color: #aaa;
     margin-bottom: 2em;
+    z-index: 2;
   }
   .timer {
     display: flex;
     gap: 1.5rem;
     direction: ltr;
+    z-index: 2;
   }
   .timer .unit {
     display: flex;
@@ -54,6 +59,98 @@
     line-height: 1;
   }
   .done h1 { color: #e74c3c; }
+
+  /* floating quotes */
+  .floating-quote {
+    position: absolute;
+    white-space: nowrap;
+    font-size: clamp(0.9rem, 2vw, 1.3rem);
+    color: rgba(255,255,255,0.15);
+    pointer-events: none;
+    z-index: 1;
+    animation: floatAcross linear infinite;
+  }
+  @keyframes floatAcross {
+    from { transform: translateX(100vw); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* fortune cookie */
+  .cookie-btn {
+    margin-top: 2.5em;
+    padding: 1em 2em;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    background: none;
+    border: 2px solid #c8a04e;
+    color: #c8a04e;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 2;
+  }
+  .cookie-btn:hover {
+    background: #c8a04e;
+    color: #0a0a0a;
+  }
+
+  /* modal overlay */
+  .cookie-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .cookie-overlay.show { display: flex; }
+
+  .fortune-cookie {
+    font-size: 8rem;
+    cursor: pointer;
+    animation: wobble 1s ease-in-out infinite;
+    user-select: none;
+    transition: all 0.5s;
+  }
+  .fortune-cookie.cracked {
+    animation: none;
+    transform: scale(1.3) rotate(15deg);
+    opacity: 0.4;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+
+  .fortune-text {
+    display: none;
+    margin-top: 1.5em;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    color: #c8a04e;
+    text-align: center;
+    max-width: 80vw;
+    animation: fadeUp 0.8s ease-out;
+  }
+  .fortune-text.show { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .close-overlay {
+    margin-top: 2em;
+    padding: 0.6em 1.5em;
+    background: none;
+    border: 1px solid #555;
+    color: #888;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: none;
+  }
+  .close-overlay.show { display: block; }
+  .close-overlay:hover { border-color: #aaa; color: #ccc; }
 </style>
 </head>
 <body>
@@ -66,22 +163,93 @@
     <div class="sep">:</div>
     <div class="unit"><span class="num" id="s">00</span><span class="label">שניות</span></div>
   </div>
+
+  <button class="cookie-btn" onclick="openCookie()">🥠 פתח עוגיית מזל</button>
+
+  <div class="cookie-overlay" id="overlay">
+    <div class="fortune-cookie" id="cookie" onclick="crackCookie()">🥠</div>
+    <div class="fortune-text" id="fortune"></div>
+    <button class="close-overlay" id="closeBtn" onclick="closeCookie()">סגור</button>
+  </div>
+
 <script>
+// Timer
 function update() {
   const now = new Date();
   const midnight = new Date(now);
   midnight.setHours(24, 0, 0, 0);
   let diff = Math.max(0, Math.floor((midnight - now) / 1000));
-  const h = String(Math.floor(diff / 3600)).padStart(2, '0');
-  const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-  const s = String(diff % 60).padStart(2, '0');
-  document.getElementById('h').textContent = h;
-  document.getElementById('m').textContent = m;
-  document.getElementById('s').textContent = s;
+  document.getElementById('h').textContent = String(Math.floor(diff / 3600)).padStart(2, '0');
+  document.getElementById('m').textContent = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+  document.getElementById('s').textContent = String(diff % 60).padStart(2, '0');
   if (diff === 0) document.body.classList.add('done');
 }
 update();
 setInterval(update, 1000);
+
+// Floating quotes
+const quotes = [
+  'הזמן לא מחכה לאף אחד',
+  'כל החלטה טובה מתחילה בספק',
+  'מי שלא מחליט — כבר החליט',
+  'הדרך הכי ארוכה מתחילה בצעד אחד',
+  'אין רוח נוחה למי שלא יודע לאן הוא מפליג',
+  'גם לא להחליט זו החלטה',
+  'החיים הם מה שקורה בזמן שאתה עסוק לתכנן',
+  'תסמוך על התהליך',
+  'הפחד מההחלטה גרוע מההחלטה עצמה',
+  'בסוף הכל מסתדר, ואם לא הסתדר — זה לא הסוף',
+  'מה שלא הורג אותך משאיר אותך עם סיפור מעניין',
+  'אל תדחה למחר מה שאתה יכול להחליט היום',
+  'החכם לומד מטעויות של אחרים, הצחי לומד מניסיון',
+  'תנשום. תחשוב. תחליט.',
+  'הכי גרוע שיכול לקרות? סלט.',
+];
+
+function spawnQuote() {
+  const q = document.createElement('div');
+  q.className = 'floating-quote';
+  q.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+  q.style.top = (10 + Math.random() * 80) + '%';
+  const duration = 12 + Math.random() * 18;
+  q.style.animationDuration = duration + 's';
+  q.style.fontSize = (0.8 + Math.random() * 0.8) + 'rem';
+  q.style.opacity = 0.08 + Math.random() * 0.12;
+  document.body.appendChild(q);
+  setTimeout(() => q.remove(), duration * 1000);
+}
+setInterval(spawnQuote, 3000);
+spawnQuote();
+setTimeout(spawnQuote, 1000);
+
+// Fortune cookie
+function openCookie() {
+  const overlay = document.getElementById('overlay');
+  const cookie = document.getElementById('cookie');
+  const fortune = document.getElementById('fortune');
+  const closeBtn = document.getElementById('closeBtn');
+  cookie.classList.remove('cracked');
+  fortune.classList.remove('show');
+  closeBtn.classList.remove('show');
+  overlay.classList.add('show');
+}
+
+function crackCookie() {
+  const cookie = document.getElementById('cookie');
+  const fortune = document.getElementById('fortune');
+  const closeBtn = document.getElementById('closeBtn');
+  if (cookie.classList.contains('cracked')) return;
+  cookie.classList.add('cracked');
+  cookie.textContent = '🍪💥';
+  fortune.textContent = '🥠 סלט נו אוויר טוב 🥠';
+  fortune.classList.add('show');
+  closeBtn.classList.add('show');
+}
+
+function closeCookie() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('cookie').textContent = '🥠';
+}
 </script>
 </body>
 </html>
