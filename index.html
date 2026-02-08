@@ -65,7 +65,7 @@
     position: fixed;
     white-space: nowrap;
     font-size: clamp(0.9rem, 2vw, 1.3rem);
-    color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.5);
     pointer-events: none;
     z-index: 1;
     will-change: transform;
@@ -215,7 +215,7 @@ function spawnQuote() {
   const duration = 12 + Math.random() * 18;
   q.style.animationDuration = duration + 's';
   q.style.fontSize = (0.8 + Math.random() * 0.8) + 'rem';
-  q.style.opacity = 0.08 + Math.random() * 0.12;
+  q.style.opacity = 0.35 + Math.random() * 0.3;
   document.body.appendChild(q);
   setTimeout(() => q.remove(), duration * 1000);
 }
