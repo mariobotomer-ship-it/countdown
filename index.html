@@ -15,7 +15,7 @@
     background: #0a0a0a;
     color: #fff;
     font-family: 'Segoe UI', Tahoma, sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
   }
   h1 {
@@ -62,17 +62,18 @@
 
   /* floating quotes */
   .floating-quote {
-    position: absolute;
+    position: fixed;
     white-space: nowrap;
     font-size: clamp(0.9rem, 2vw, 1.3rem);
-    color: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.25);
     pointer-events: none;
     z-index: 1;
+    will-change: transform;
     animation: floatAcross linear infinite;
   }
   @keyframes floatAcross {
-    from { transform: translateX(100vw); }
-    to { transform: translateX(-100%); }
+    from { transform: translateX(calc(100vw + 10px)); }
+    to { transform: translateX(calc(-100% - 10px)); }
   }
 
   /* fortune cookie */
